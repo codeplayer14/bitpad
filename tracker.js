@@ -12,6 +12,11 @@ module.exports.getPeers = (torrent,callback) => {
     const url = torrent.announce.toString();
     
     udpSend(socket,buildConnReq(),url);
+
+    socket.on('message',response => {
+
+    
+    })
 }
 
 function udpSend(socket,message,rawUrl, callback = ()=>{}) {
@@ -23,7 +28,8 @@ function udpSend(socket,message,rawUrl, callback = ()=>{}) {
 const buildConnReq = () => {
     
     const buf = Buffer.alloc(16);
-    //connection id
+
+    //protocol id
     buf.writeUInt32BE(0x417,0);
     buf.writeUInt32BE(0x27101980,4);
 
@@ -32,3 +38,10 @@ const buildConnReq = () => {
 
     crypto.randomBytes(4).copy(buf,12);
 }
+
+const parseResponse = (resp) => ({
+
+        action: resp.readUINT32BE(0),
+        transaction_id:resp.readUINT32BE(4),
+        connect_id:resp.slice(8)
+})
