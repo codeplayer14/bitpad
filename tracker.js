@@ -4,19 +4,39 @@ const dgram = require('dgram');
 const {Buffer} = require('buffer');
 const urlParse = require('url').parse;
 const crypto = require('crypto');
-
+const torrentParser = require('./torrent-parser');
+const util = require('./util');
 
 module.exports.getPeers = (torrent,callback) => {
 
     const socket = dgram.createSocket('udp4');
     const url = torrent.announce.toString();
+    const announceReq  = 
     
     udpSend(socket,buildConnReq(),url);
 
     socket.on('message',response => {
 
+        const announceReq = buildAnnounceReq(connectResp.connect_id,torrent);
+
+        if(respType(response) === 'connect'){
+
+            const connectResp = parseConnResp(response);
+
+            const announceReq = parseAnnounceReq(connectResp.connect_id);
+            
+            udpSend(socket,announceReq,url);
+
+        }else if(respType(response)==='announce'){
+
+            const announceResp = parseAnnounceResp(response);
+            
+            // callback(announceResp.peers);
+        }
     
     })
+
+    const announceReq = buildAnnounceReq(conn)
 }
 
 function udpSend(socket,message,rawUrl, callback = ()=>{}) {
@@ -39,9 +59,42 @@ const buildConnReq = () => {
     crypto.randomBytes(4).copy(buf,12);
 }
 
-const parseResponse = (resp) => ({
+const parseConnResp = (resp) => ({
 
         action: resp.readUINT32BE(0),
         transaction_id:resp.readUINT32BE(4),
         connect_id:resp.slice(8)
 })
+
+
+const buildAnnounceReq = (connectionId,torrent,port=6881) => {
+
+    const buf = Buffer.allocUnsafe(98);
+
+    connectionId.copy(buf,0);
+    buf.writeUInt32BE(1,8);
+    crypto.randomBytes(4).copy(buf,12);
+
+    //info hash
+    torrentParser.infoHash(torrent).copy(buf,16);
+    //peer id
+    util.genId().copy(buf,36);
+    //downloaded
+    Buffer.alloc(8).copy(buf,56);
+    
+    torrentParser.size(torrent).copy(buf,64);
+
+    Buffer.alloc(8).copy(buf,72);
+
+    //event 0-none, 1-started 2-completed 3-stopped
+    buf.writeUInt32BE(0,80);
+    //ip
+    buf.writeUInt32BE(0,84);
+    //key
+    crypto.randomBytes(4).copy(buf,88);
+    //num want
+    buf.writeInt32BE(-1, 92);
+
+    //port
+    buf.writeInt16BE(port,96);
+}
