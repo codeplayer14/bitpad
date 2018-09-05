@@ -96,5 +96,36 @@ const buildAnnounceReq = (connectionId,torrent,port=6881) => {
     buf.writeInt32BE(-1, 92);
 
     //port
-    buf.writeInt16BE(port,96);
+    buf.writeUInt16BE(port,96);
+
+    return buf;
+}
+
+const parseAnnounceResp = (resp) => {
+
+    const group = (iterable,groupSize) => {
+
+        let groups = [];
+        for(let i=0;i<iterable.length;i+=groupSize){
+
+            groups.push(iterable.slice(i,i+groupSize));
+        }
+
+        return groups;
+    }
+
+    return {
+
+        action: resp.readUINT32BE(0),
+        transaction_id:resp.readUINT32BE(4),
+        leechers: resp.readUINT32BE(12),
+        seeders: resp.readUINT32BE(16),
+        peers: group(resp.slice(20),6).map(address => ({
+
+                ip:address.slice(0,4).join('.'),
+                port:address.readUINT16BE(4)
+            })
+        )
+
+    }
 }
