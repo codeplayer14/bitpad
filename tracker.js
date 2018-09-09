@@ -128,4 +128,11 @@ const parseAnnounceResp = (resp) => {
         )
 
     }
+    const respType = (resp) => {
+
+        const action = resp.readUINT32BE(0);
+        if(action === 0) return 'connect';
+        if(action === 1) return 'announce';
+    }
 }
+
