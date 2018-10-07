@@ -54,4 +54,4 @@ function onWholeMsg(socket, callback) {
         handshake = false;
       }
     });
-  }
+  } 

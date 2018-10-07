@@ -11,7 +11,7 @@ module.exports.getPeers = (torrent,callback) => {
 
     const socket = dgram.createSocket('udp4');
     const url = torrent.announce.toString();
-    const announceReq  = 
+
     
     udpSend(socket,buildConnReq(),url);
 

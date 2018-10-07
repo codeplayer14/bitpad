@@ -1,5 +1,9 @@
 'use strict';
 
+/*
+writeUInt32BE -  (value,offset)
+
+*/
 const Buffer = require('buffer').Buffer;
 const torrentParser = require('./torrent-parser');
 
